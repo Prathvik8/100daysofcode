@@ -55,7 +55,12 @@ CODE100 is a production-ready, full-stack gamified competitive coding platform a
 
 1. **Clone and enter repository:**
    ```bash
-   cd "c:\Users\PRATHVIK\Desktop\100 DAYS"
+   git clone https://github.com/Prathvik8/100daysofcode.git
+   cd 100daysofcode
+   ```
+   Install dependencies:
+   ```bash
+   npm install
    ```
 
 2. **Environment Configuration:**
