@@ -1,0 +1,310 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  PARTICIPANT
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum ParticipantStatus {
+  ACTIVE
+  SUSPENDED
+  DISQUALIFIED
+  COMPLETED
+  INACTIVE
+}
+
+enum ChallengeDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ChallengeStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  CLOSED
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FLAGGED
+}
+
+enum AnnouncementType {
+  GENERAL
+  IMPORTANT
+  CHALLENGE
+  EVENT
+  MAINTENANCE
+}
+
+enum CertificateStatus {
+  NOT_ELIGIBLE
+  ELIGIBLE
+  GENERATED
+  ISSUED
+}
+
+model User {
+  id              String            @id @default(cuid())
+  email           String            @unique
+  passwordHash    String
+  name            String
+  studentId       String?           @unique
+  phone           String?
+  branch          String?           // CSE, ISE, ECE, EEE, ME, AIML, etc.
+  year            Int?              // 1, 2, 3, 4
+  codingPlatform  String?           // leetcode, codechef, hackerrank, gfg
+  platformUsername String?
+  profilePicture  String?
+  role            String            @default("PARTICIPANT") // PARTICIPANT, ADMIN, SUPER_ADMIN
+  status          String            @default("ACTIVE")      // ACTIVE, SUSPENDED, DISQUALIFIED, etc.
+  recoveryTokens  Int               @default(3)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  submissions        Submission[]
+  userBadges         UserBadge[]
+  streak             Streak?
+  notifications      Notification[]
+  scoreTransactions  ScoreTransaction[]
+  recoveryLogs       RecoveryTokenLog[]
+  auditLogsTriggered AuditLog[]         @relation("AdminAudit")
+  certificate        Certificate?
+  announcementsAuthored Announcement[]
+
+  @@index([email])
+  @@index([studentId])
+  @@index([role])
+}
+
+model Challenge {
+  id                 String              @id @default(cuid())
+  dayNumber          Int                 @unique
+  title              String
+  slug               String              @unique
+  description        String
+  topic              String              // e.g. "Sliding Window", "Binary Search"
+  difficulty         String              @default("MEDIUM") // EASY, MEDIUM, HARD
+  platform           String              @default("LeetCode")
+  externalUrl        String
+  points             Int                 @default(15)
+  startDate          DateTime
+  deadline           DateTime
+  constraints        String?
+  examples           String?
+  hint               String?
+  editorial          String?
+  editorialReleaseAt DateTime?
+  status             String              @default("ACTIVE") // DRAFT, SCHEDULED, ACTIVE, CLOSED
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  submissions        Submission[]
+
+  @@index([dayNumber])
+  @@index([status])
+  @@index([startDate])
+}
+
+model Submission {
+  id             String           @id @default(cuid())
+  userId         String
+  challengeId    String
+  solutionUrl    String
+  platform       String           @default("LeetCode")
+  code           String?
+  screenshotUrl  String?
+  status         String           @default("PENDING") // PENDING, APPROVED, REJECTED, FLAGGED
+  pointsAwarded  Int              @default(0)
+  reviewedBy     String?
+  adminNotes     String?
+  suspiciousFlag String?          // e.g. duplicate_url, rapid_submission
+  submittedAt    DateTime         @default(now())
+  reviewedAt     DateTime?
+
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge      Challenge        @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([challengeId])
+  @@index([status])
+  @@index([submittedAt])
+}
+
+model Streak {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  currentStreak     Int       @default(0)
+  longestStreak     Int       @default(0)
+  lastCompletedDate DateTime?
+  updatedAt         DateTime  @updatedAt
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ScoreTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  points      Int
+  reason      String
+  challengeId String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model RecoveryTokenLog {
+  id            String   @id @default(cuid())
+  userId        String
+  challengeDay  Int
+  reason        String
+  recoveredDate DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  description String
+  icon        String      // Icon identifier
+  criteria    String      // Criteria explanation or rule key
+  rarity      String      @default("COMMON") // COMMON, RARE, EPIC, LEGENDARY
+  active      Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+
+  userBadges  UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   String
+  earnedAt  DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+}
+
+model Announcement {
+  id        String    @id @default(cuid())
+  title     String
+  content   String
+  type      String    @default("GENERAL") // GENERAL, IMPORTANT, CHALLENGE, EVENT, MAINTENANCE
+  publishAt DateTime  @default(now())
+  expiryAt  DateTime?
+  pinned    Boolean   @default(false)
+  createdBy String?
+
+  author    User?     @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([pinned])
+  @@index([publishAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("GENERAL") // STREAK_WARNING, SUBMISSION_APPROVED, BADGE_EARNED, etc.
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+model LeaderboardSnapshot {
+  id               String   @id @default(cuid())
+  userId           String
+  name             String
+  branch           String?
+  year             Int?
+  points           Int
+  solvedCount      Int
+  currentStreak    Int
+  longestStreak    Int
+  rank             Int
+  previousRank     Int?
+  consistencyScore Float    @default(0)
+  lastSubmissionAt DateTime?
+  snapshotDate     DateTime @default(now())
+
+  @@index([rank])
+  @@index([points])
+  @@index([userId])
+}
+
+model Certificate {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  status      String   @default("NOT_ELIGIBLE") // NOT_ELIGIBLE, ELIGIBLE, GENERATED, ISSUED
+  certificateNumber String? @unique
+  issueDate   DateTime?
+  pdfUrl      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String?
+  action     String   // e.g. "SUBMISSION_APPROVED", "USER_SUSPENDED", "POINTS_ADJUSTED"
+  targetType String   // e.g. "Submission", "User", "Challenge", "Settings"
+  targetId   String?
+  oldValue   String?
+  newValue   String?
+  ipAddress  String?
+  timestamp  DateTime @default(now())
+
+  admin      User?    @relation("AdminAudit", fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([action])
+  @@index([timestamp])
+}
+
+model EventSetting {
+  id                           String   @id @default("global")
+  eventName                    String   @default("CODE100 — 100 Days of DSA")
+  eventTagline                 String   @default("100 Days. 100 Problems. One Streak.")
+  organizationName             String   @default("GAT ACM Student Chapter")
+  startDate                    DateTime @default(now())
+  endDate                      DateTime
+  currentDayOverride           Int?     // If null, calculate from (now - startDate)
+  registrationOpen             Boolean  @default(true)
+  allowedEmailDomains          String   @default("gat.ac.in,acm.org") // Comma-separated or * for any
+  easyPoints                   Int      @default(10)
+  mediumPoints                 Int      @default(15)
+  hardPoints                   Int      @default(20)
+  defaultRecoveryTokens        Int      @default(3)
+  certificateThresholdProblems Int      @default(80)
+  maintenanceMode              Boolean  @default(false)
+  updatedAt                    DateTime @updatedAt
+}
