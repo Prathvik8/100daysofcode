@@ -44,3 +44,8 @@ next-env.d.ts
 *.db
 *.db-journal
 ~$*.docx
+# AI tooling and local IDE configs
+.claude/
+.devin/
+.cursor/
+.agents/
