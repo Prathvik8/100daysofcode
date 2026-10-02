@@ -73,34 +73,110 @@ def create_document():
         doc.add_paragraph().paragraph_format.space_after = Pt(4)
 
     # ==========================
-    # TITLE & HEADER SECTION
+    # TITLE & HEADER SECTION (WITH LOGOS)
     # ==========================
-    title_p = doc.add_paragraph()
-    title_p.paragraph_format.space_before = Pt(0)
-    title_p.paragraph_format.space_after = Pt(2)
-    run_org = title_p.add_run("GLOBAL ACADEMY OF TECHNOLOGY — ACM STUDENT CHAPTER")
-    run_org.bold = True
-    run_org.font.name = "Calibri"
-    run_org.font.size = Pt(11)
-    run_org.font.color.rgb = COLOR_PRIMARY
+    # Header logos table: College Logo (Left) | Title block (Center) | ACM Logo (Right)
+    college_logo_path = os.path.join(os.path.dirname(__file__), "assets", "college_logo_clean.png")
+    if not os.path.exists(college_logo_path):
+        college_logo_path = os.path.join(os.path.dirname(__file__), "assets", "college_logo.png")
 
-    main_h = doc.add_paragraph()
-    main_h.paragraph_format.space_before = Pt(4)
-    main_h.paragraph_format.space_after = Pt(4)
-    run_h = main_h.add_run("CODE100 — 100 Days of DSA Platform")
-    run_h.bold = True
-    run_h.font.name = "Calibri"
-    run_h.font.size = Pt(24)
-    run_h.font.color.rgb = COLOR_DARK
+    acm_logo_path = os.path.join(os.path.dirname(__file__), "assets", "acm_logo_clean.png")
+    if not os.path.exists(acm_logo_path):
+        acm_logo_path = os.path.join(os.path.dirname(__file__), "assets", "acm_logo.jpg")
 
-    sub_p = doc.add_paragraph()
-    sub_p.paragraph_format.space_before = Pt(0)
-    sub_p.paragraph_format.space_after = Pt(14)
-    run_sub = sub_p.add_run("Comprehensive Software Architecture, Technical Specifications, Anti-Cheat Verification, & Operations Manual")
-    run_sub.italic = True
-    run_sub.font.name = "Calibri"
-    run_sub.font.size = Pt(13)
-    run_sub.font.color.rgb = COLOR_MUTED
+    has_college_logo = os.path.exists(college_logo_path)
+    has_acm_logo = os.path.exists(acm_logo_path)
+
+    if has_college_logo or has_acm_logo:
+        header_table = doc.add_table(rows=1, cols=3)
+        header_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        # 1.8 in (left logo), 3.2 in (center title), 1.8 in (right logo) -> Total ~6.8 in (standard 8.5" width - 2*0.8" margins)
+        col_widths = [Inches(1.8), Inches(3.2), Inches(1.8)]
+        for row in header_table.rows:
+            for idx, width in enumerate(col_widths):
+                row.cells[idx].width = width
+
+        # Left cell: College Logo (prominent and clear)
+        left_cell = header_table.cell(0, 0)
+        p_left = left_cell.paragraphs[0]
+        p_left.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        if has_college_logo:
+            p_left.add_run().add_picture(college_logo_path, width=Inches(1.65))
+
+        # Center cell: Organization & Title text
+        center_cell = header_table.cell(0, 1)
+        p_center = center_cell.paragraphs[0]
+        p_center.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_center.paragraph_format.space_before = Pt(4)
+        p_center.paragraph_format.space_after = Pt(2)
+
+        run_org = p_center.add_run("GLOBAL ACADEMY OF TECHNOLOGY\nACM STUDENT CHAPTER\n")
+        run_org.bold = True
+        run_org.font.name = "Calibri"
+        run_org.font.size = Pt(11)
+        run_org.font.color.rgb = COLOR_PRIMARY
+
+        run_h = p_center.add_run("CODE100 — 100 Days of DSA Platform\n")
+        run_h.bold = True
+        run_h.font.name = "Calibri"
+        run_h.font.size = Pt(15)
+        run_h.font.color.rgb = COLOR_DARK
+
+        run_sub = p_center.add_run("Comprehensive Technical Specifications & Operations Manual")
+        run_sub.italic = True
+        run_sub.font.name = "Calibri"
+        run_sub.font.size = Pt(9.5)
+        run_sub.font.color.rgb = COLOR_MUTED
+
+        # Right cell: ACM Student Chapter Logo (prominent and clear)
+        right_cell = header_table.cell(0, 2)
+        p_right = right_cell.paragraphs[0]
+        p_right.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        if has_acm_logo:
+            p_right.add_run().add_picture(acm_logo_path, width=Inches(1.65))
+
+        # Clear borders on header table
+        for row in header_table.rows:
+            for cell in row.cells:
+                tcPr = cell._tc.get_or_add_tcPr()
+                borders = parse_xml(f'''
+                    <w:tcBorders {nsdecls("w")}>
+                        <w:top w:val="none"/>
+                        <w:left w:val="none"/>
+                        <w:bottom w:val="none"/>
+                        <w:right w:val="none"/>
+                    </w:tcBorders>
+                ''')
+                tcPr.append(borders)
+
+        doc.add_paragraph().paragraph_format.space_after = Pt(10)
+    else:
+        title_p = doc.add_paragraph()
+        title_p.paragraph_format.space_before = Pt(0)
+        title_p.paragraph_format.space_after = Pt(2)
+        run_org = title_p.add_run("GLOBAL ACADEMY OF TECHNOLOGY — ACM STUDENT CHAPTER")
+        run_org.bold = True
+        run_org.font.name = "Calibri"
+        run_org.font.size = Pt(11)
+        run_org.font.color.rgb = COLOR_PRIMARY
+
+        main_h = doc.add_paragraph()
+        main_h.paragraph_format.space_before = Pt(4)
+        main_h.paragraph_format.space_after = Pt(4)
+        run_h = main_h.add_run("CODE100 — 100 Days of DSA Platform")
+        run_h.bold = True
+        run_h.font.name = "Calibri"
+        run_h.font.size = Pt(24)
+        run_h.font.color.rgb = COLOR_DARK
+
+        sub_p = doc.add_paragraph()
+        sub_p.paragraph_format.space_before = Pt(0)
+        sub_p.paragraph_format.space_after = Pt(14)
+        run_sub = sub_p.add_run("Comprehensive Software Architecture, Technical Specifications, Anti-Cheat Verification, & Operations Manual")
+        run_sub.italic = True
+        run_sub.font.name = "Calibri"
+        run_sub.font.size = Pt(13)
+        run_sub.font.color.rgb = COLOR_MUTED
 
     # Document Meta Table
     meta_table = doc.add_table(rows=4, cols=2)
@@ -408,22 +484,74 @@ def create_document():
     add_bullet("Sanitized Submissions: Solution URLs and code snippets are trimmed and validated against regex patterns to mitigate injection vulnerabilities.", "Input Sanitization:")
 
     # ==========================
-    # 8. DEPLOYMENT & MAINTENANCE
+    # 8. DEPLOYMENT & HOSTING INFRASTRUCTURE GUIDE
     # ==========================
-    add_section_heading("8", "Deployment, Operations, & Maintenance")
-    add_p("The application is configured for deployment on institutional infrastructure or cloud hosting platforms:")
+    add_section_heading("8", "Hosting, Deployment, & Cloud Infrastructure")
+    add_p("This section details the hosting architectures for CODE100 across $0 free tiers, institutional deployments, and high-concurrency production setups.")
 
-    add_sub_heading("Deployment Instructions")
-    add_bullet("Ensure Node.js 20+ or 22+ LTS is installed.", "1. Prerequisites:")
-    add_bullet("Run `npm install` to install all production and development dependencies.", "2. Dependency Installation:")
-    add_bullet("Configure `.env` with `DATABASE_URL` (SQLite for local/test, PostgreSQL for production) and `AUTH_SECRET`.", "3. Environment Setup:")
-    add_bullet("Execute `npx prisma db push` and `npx tsx prisma/seed.ts` to initialize the database and 100 curated challenges.", "4. Database Initialization:")
-    add_bullet("Run `npm run build` followed by `npm run start` (or host via PM2 / Docker) to launch the high-performance production server.", "5. Production Build:")
+    add_sub_heading("A. $0 Free-Tier Architecture (Vercel + Supabase / Neon)")
+    add_p("For a 100-day college event with 500 to 1,000 registered students, CODE100 can run at zero infrastructure cost ($0):")
+    add_bullet("Next.js App Router deployed with automatic edge caching, SSL, and instant Git rollbacks.", "Frontend & API (Vercel Hobby):")
+    add_bullet("Hosted PostgreSQL with connection pooling (PgBouncer/Supavisor, port 6543) preventing connection exhaustion from serverless functions.", "Database (Supabase / Neon Free):")
+    add_bullet("Stateless Jose JWT authentication enclosed in HttpOnly cookies, requiring zero external auth server dependencies.", "Authentication:")
+    add_bullet("Vercel default subdomain (code100.vercel.app) or an institutional college subdomain (code100.gat.ac.in via CNAME) with automated Let's Encrypt certificates.", "Domain & SSL:")
+
+    add_sub_heading("B. Hosting Provider Evaluation Matrix")
+    deploy_table = doc.add_table(rows=6, cols=4)
+    deploy_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    for j, h in enumerate(["Provider", "Plan / Cost", "Database Support", "Suitability for CODE100"]):
+        c = deploy_table.cell(0, j)
+        set_cell_background(c, SECONDARY_HEX)
+        set_cell_margins(c, 80, 80, 80, 80)
+        p = c.paragraphs[0]
+        r = p.add_run(h)
+        r.bold = True
+        r.font.name = "Calibri"
+        r.font.size = Pt(9.5)
+        r.font.color.rgb = COLOR_WHITE
+
+    deploy_rows = [
+        ("Vercel", "Hobby ($0) / Pro ($20/mo)", "External DB (Supabase / Neon)", "Recommended for Next.js App Router; instant preview builds & automated edge scaling."),
+        ("Render", "Free Web Service / Starter ($7/mo)", "Managed PostgreSQL ($0 for 30d, then $7/mo)", "Good container option; free tier spins down after 15 minutes of inactivity."),
+        ("Railway", "Trial ($5 credit) / Usage-based", "PostgreSQL plugin included", "Excellent developer experience, but requires payment method after initial credits."),
+        ("Self-Hosted VPS / College Lab", "Hardware amortized ($0) or $5-$10/mo VPS", "Local PostgreSQL 16 + PgBouncer", "Ideal for complete internal campus control using Docker and PM2 reverse-proxied by Nginx."),
+        ("Supabase (DB)", "Free Tier (500MB DB storage)", "Native PostgreSQL + Connection Pooler", "Ideal free DB for 100-day marathon; handles 50k monthly active users effortlessly.")
+    ]
+
+    for i, row in enumerate(deploy_rows, start=1):
+        for j, val in enumerate(row):
+            c = deploy_table.cell(i, j)
+            set_cell_background(c, "F8FAFC" if i % 2 == 1 else "FFFFFF")
+            set_cell_margins(c, 70, 70, 70, 70)
+            p = c.paragraphs[0]
+            r = p.add_run(val)
+            r.font.name = "Calibri"
+            r.font.size = Pt(8.5)
+            r.font.color.rgb = COLOR_DARK
+
+    doc.add_paragraph().paragraph_format.space_after = Pt(6)
+
+    add_sub_heading("C. Step-by-Step Free Deployment Runbook")
+    add_bullet("1. Push repository code to GitHub.", "Step 1 (Source Code):")
+    add_bullet("2. Create a free project on Supabase in South Asia (Mumbai) and copy the pooled connection string (port 6543).", "Step 2 (Database Provisioning):")
+    add_bullet("3. Change datasource in prisma/schema.prisma to 'postgresql'.", "Step 3 (Schema Adjustment):")
+    add_bullet("4. Run `npx prisma db push` to create tables, then execute `npx tsx prisma/seed.ts` to populate the 100 DSA challenges.", "Step 4 (Database Initialization):")
+    add_bullet("5. Import repository into Vercel, configure DATABASE_URL, AUTH_SECRET, and NEXT_PUBLIC_APP_URL, and click Deploy.", "Step 5 (Production Build):")
+    add_bullet("6. Under Project Settings -> Domains, connect code100.vercel.app or add a CNAME record for code100.gat.ac.in.", "Step 6 (Domain Binding):")
+
+    add_sub_heading("D. Disaster Recovery & Emergency Fallback")
+    add_bullet("If the primary web service suffers an outage, an emergency Google Form is activated for students to record their solution URLs and timestamps without losing streak continuity.", "Outage Contingency:")
+    add_bullet("Nightly automated pg_dump backups preserve student submissions, streaks, and audit history.", "Backup Strategy:")
 
     add_sub_heading("Default Administrative Credentials")
     add_bullet("`superadmin@gat.ac.in` | Password: `acm@gat2026`", "Super Admin Account:")
     add_bullet("`admin@gat.ac.in` | Password: `acm@gat2026`", "Admin Account:")
     add_bullet("`student@gat.ac.in` | Password: `student@gat2026`", "Test Student Account:")
+
+    add_callout(
+        "CODE100 Platform was conceptualized, designed, and built by GAT ACM STUDENT CHAPTER for the student community of Global Academy of Technology.",
+        "PROJECT ATTRIBUTION"
+    )
 
     # Save Document
     doc_path = r"c:\Users\PRATHVIK\Desktop\100 DAYS\CODE100_Comprehensive_Software_Documentation.docx"

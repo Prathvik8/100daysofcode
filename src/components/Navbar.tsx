@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Terminal, Shield, Award, Trophy, User, LogOut, Menu, X, Bell } from "lucide-react";
 
@@ -25,24 +26,33 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-md bg-[#080c14]/85 border-b border-zinc-800/80">
+    <header className="sticky top-0 z-50 backdrop-blur-md bg-[#080c14]/95 border-b border-zinc-800/80 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo & ACM Branding */}
-          <Link href="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-600 to-rose-900 flex items-center justify-center shadow-lg shadow-rose-950/40 group-hover:scale-105 transition-transform">
-              <Terminal className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-1.5">
-                <span className="font-black text-xl tracking-wider text-white">CODE<span className="text-rose-500">100</span></span>
-                <span className="text-[10px] uppercase tracking-widest font-semibold px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                  GAT ACM
-                </span>
+        <div className="flex items-center justify-between h-20 gap-4">
+          {/* Left Corner: College Logo (Global Academy of Technology) */}
+          <div className="flex items-center space-x-3.5 shrink-0">
+            <Link href="/" className="flex items-center space-x-3 group" title="Global Academy of Technology">
+              <div className="relative h-14 px-3 py-1 rounded-xl bg-white flex items-center justify-center shadow-lg border border-white/40 transition-transform group-hover:scale-105">
+                <Image
+                  src="/college_logo.png"
+                  alt="Global Academy of Technology"
+                  width={150}
+                  height={54}
+                  className="h-11 w-auto object-contain"
+                  priority
+                />
               </div>
-              <p className="text-[10px] text-zinc-400 font-mono tracking-tight">100 Days of DSA</p>
-            </div>
-          </Link>
+              <div className="hidden sm:block">
+                <div className="flex items-center space-x-1.5">
+                  <span className="font-black text-xl tracking-wider text-white">CODE<span className="text-rose-500">100</span></span>
+                  <span className="text-[10px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                    GAT ACM
+                  </span>
+                </div>
+                <p className="text-[11px] text-zinc-400 font-mono tracking-tight">100 Days of DSA</p>
+              </div>
+            </Link>
+          </div>
 
           {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
@@ -72,58 +82,75 @@ export default function Navbar() {
             )}
           </nav>
 
-          {/* User Session Action Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
-            {currentUser ? (
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-xs">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                  <span className="text-zinc-200 font-medium">{currentUser.name.split(" ")[0]}</span>
-                  {currentUser.streak && (
-                    <span className="text-rose-400 font-bold ml-1">🔥 {currentUser.streak.currentStreak}d</span>
-                  )}
+          {/* Right Corner: User Actions & ACM Logo */}
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            {/* User Session Action Buttons */}
+            <div className="hidden md:flex items-center space-x-3">
+              {currentUser ? (
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-xs">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span className="text-zinc-200 font-medium">{currentUser.name.split(" ")[0]}</span>
+                    {currentUser.streak && (
+                      <span className="text-rose-400 font-bold ml-1">🔥 {currentUser.streak.currentStreak}d</span>
+                    )}
+                  </div>
+                  <Link
+                    href="/profile"
+                    className="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                    title="Profile"
+                  >
+                    <User className="w-4 h-4" />
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 rounded-lg bg-zinc-900 hover:bg-rose-950/40 hover:border-rose-800/40 border border-zinc-800 text-zinc-400 hover:text-rose-400 transition-colors"
+                    title="Sign Out"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
                 </div>
-                <Link
-                  href="/profile"
-                  className="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white transition-colors"
-                  title="Profile"
-                >
-                  <User className="w-4 h-4" />
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="p-2 rounded-lg bg-zinc-900 hover:bg-rose-950/40 hover:border-rose-800/40 border border-zinc-800 text-zinc-400 hover:text-rose-400 transition-colors"
-                  title="Sign Out"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-3">
-                <Link
-                  href="/login"
-                  className="text-sm font-medium text-zinc-300 hover:text-white px-3 py-2 transition-colors"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/register"
-                  className="px-4 py-2 text-sm font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-950/40 transition-all"
-                >
-                  Join Challenge
-                </Link>
-              </div>
-            )}
-          </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Link
+                    href="/login"
+                    className="text-xs sm:text-sm font-medium text-zinc-300 hover:text-white px-2.5 py-1.5 transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-950/40 transition-all"
+                  >
+                    Join Challenge
+                  </Link>
+                </div>
+              )}
+            </div>
 
-          {/* Mobile hamburger toggle */}
-          <div className="flex md:hidden items-center space-x-2">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+            {/* ACM Logo in the Right Corner (Prominent & Clear) */}
+            <div className="shrink-0 flex items-center pl-3 border-l border-zinc-800/80" title="GAT ACM Student Chapter">
+              <div className="relative h-14 px-3 py-1 rounded-xl bg-white flex items-center justify-center shadow-lg border border-white/40 transition-transform hover:scale-105">
+                <Image
+                  src="/acm_logo.png"
+                  alt="ACM Student Chapter GAT"
+                  width={150}
+                  height={54}
+                  className="h-11 w-auto object-contain"
+                  priority
+                />
+              </div>
+            </div>
+
+            {/* Mobile hamburger toggle */}
+            <div className="flex md:hidden items-center">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
+              >
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
         </div>
       </div>
